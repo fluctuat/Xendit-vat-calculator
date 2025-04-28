@@ -16,7 +16,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' https://xendit-docs.document360.io https://docs.xendit.co",
+            value: "frame-ancestors 'self' https://xendit-docs.document360.io https://docs.xendit.co https://portal.document360.io",
           },
         ],
       },
