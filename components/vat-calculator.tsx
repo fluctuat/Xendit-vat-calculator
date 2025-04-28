@@ -78,60 +78,34 @@ type CountryCode = keyof typeof VAT
 
 export default function VatCalculator() {
   const [country, setCountry] = useState<CountryCode>("ID")
-  const [amount, setAmount] = useState<number>(VAT.ID.defaultAmt)
-  const [flatFee, setFlatFee] = useState<number>(VAT.ID.defaultFlat)
-  const [percentFee, setPercentFee] = useState<number>(2)
+  const [amount, setAmount] = useState<string | number>(VAT.ID.defaultAmt)
+  const [flatFee, setFlatFee] = useState<string | number>(VAT.ID.defaultFlat)
+  const [percentFee, setPercentFee] = useState<string | number>(2)
   const [results, setResults] = useState<any>(null)
   const [isCalculated, setIsCalculated] = useState<boolean>(false)
 
-  // Format number based on locale
-  const formatNumber = (val: number, locale: string) => {
-    return val.toLocaleString(locale, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
+  // Helper to format with thousands separator (en-US: ',' for thousands, '.' for decimal)
+  const formatInput = (val: string | number) => {
+    if (val === '' || val === null || val === undefined) return ''
+    const num = Number((typeof val === 'string' ? val.replace(/,/g, '').replace(',', '.') : val) || 0)
+    if (isNaN(num)) return ''
+    return num.toLocaleString("en-US", { maximumFractionDigits: 2 })
   }
 
-  // Set defaults when country changes
+  // Calculate VAT and fees automatically on input change
   useEffect(() => {
     const cfg = VAT[country]
-    setAmount(cfg.defaultAmt)
-    setFlatFee(cfg.defaultFlat)
-
-    // Add a setTimeout to ensure state updates have completed before calculating
-    setTimeout(() => {
-      // Calculate with the default values
-      const feeFlat = cfg.defaultFlat
-      const feeVar = cfg.defaultAmt * (percentFee / 100)
-      const totalFee = feeFlat + feeVar
-      const vatBase = totalFee * (cfg.base || 1)
-      const vat = vatBase * (cfg.rate || 0)
-      const receive = cfg.defaultAmt - totalFee - vat
-
-      setResults({
-        feeFlat,
-        feeVar,
-        totalFee,
-        vat,
-        receive,
-        cfg,
-      })
-
-      setIsCalculated(true)
-    }, 0)
-  }, [country, percentFee])
-
-  // Calculate VAT and fees
-  const calculate = () => {
-    const cfg = VAT[country]
-
-    const feeFlat = flatFee
-    const feeVar = amount * (percentFee / 100)
+    const amt = Number((typeof amount === 'string' ? amount.toString().replace(/,/g, '').replace(',', '.') : amount) || 0)
+    const flat = Number((typeof flatFee === 'string' ? flatFee.toString().replace(/,/g, '').replace(',', '.') : flatFee) || 0)
+    let percent = Number((typeof percentFee === 'string' ? percentFee.toString().replace(/,/g, '').replace(',', '.') : percentFee) || 0)
+    // Clamp percent between 0 and 100
+    percent = Math.max(0, Math.min(100, percent))
+    const feeFlat = flat
+    const feeVar = amt * (percent / 100)
     const totalFee = feeFlat + feeVar
     const vatBase = totalFee * (cfg.base || 1)
     const vat = vatBase * (cfg.rate || 0)
-    const receive = amount - totalFee - vat
-
+    const receive = amt - totalFee - vat
     setResults({
       feeFlat,
       feeVar,
@@ -140,9 +114,21 @@ export default function VatCalculator() {
       receive,
       cfg,
     })
-
     setIsCalculated(true)
+  }, [country, amount, flatFee, percentFee])
+
+  // Format number for results (en-US)
+  const formatNumber = (val: number) => {
+    return val.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
   }
+
+  useEffect(() => {
+    setAmount(VAT[country].defaultAmt)
+    setFlatFee(VAT[country].defaultFlat)
+  }, [country])
 
   return (
     <Card className="w-full shadow-sm border border-slate-200 bg-white dark:bg-slate-900">
@@ -181,10 +167,19 @@ export default function VatCalculator() {
             </Label>
             <Input
               id="amount"
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              type="text"
+              value={formatInput(amount)}
+              onChange={e => {
+                let val = e.target.value.replace(/,/g, '').replace(',', '.')
+                if (val === '') {
+                  setAmount('')
+                  return
+                }
+                // Only allow valid numbers
+                if (!isNaN(Number(val))) {
+                  setAmount(val)
+                }
+              }}
               className="w-full"
             />
           </div>
@@ -195,10 +190,18 @@ export default function VatCalculator() {
             </Label>
             <Input
               id="flatFee"
-              type="number"
-              step="0.01"
-              value={flatFee}
-              onChange={(e) => setFlatFee(Number(e.target.value))}
+              type="text"
+              value={formatInput(flatFee)}
+              onChange={e => {
+                let val = e.target.value.replace(/,/g, '').replace(',', '.')
+                if (val === '') {
+                  setFlatFee('')
+                  return
+                }
+                if (!isNaN(Number(val))) {
+                  setFlatFee(val)
+                }
+              }}
               className="w-full"
             />
           </div>
@@ -209,17 +212,23 @@ export default function VatCalculator() {
             </Label>
             <Input
               id="percentFee"
-              type="number"
-              step="0.01"
-              value={percentFee}
-              onChange={(e) => setPercentFee(Number(e.target.value))}
+              type="text"
+              value={formatInput(percentFee)}
+              onChange={e => {
+                let val = e.target.value.replace(/,/g, '').replace(',', '.')
+                if (val === '') {
+                  setPercentFee('')
+                  return
+                }
+                if (!isNaN(Number(val))) {
+                  // Clamp between 0 and 100
+                  let num = Math.max(0, Math.min(100, Number(val)))
+                  setPercentFee(num)
+                }
+              }}
               className="w-full"
             />
           </div>
-
-          <Button onClick={calculate} className="w-full bg-slate-800 hover:bg-slate-700 transition-all duration-300">
-            <Calculator className="mr-2 h-4 w-4" /> Calculate
-          </Button>
 
           {isCalculated && results && (
             <div
@@ -232,21 +241,21 @@ export default function VatCalculator() {
               <div className="flex justify-between items-center">
                 <span className="text-slate-600 dark:text-slate-400">Flat fee</span>
                 <span className="font-semibold">
-                  {results.cfg.symbol} {formatNumber(results.feeFlat, results.cfg.locale)}
+                  {results.cfg.symbol} {formatNumber(results.feeFlat)}
                 </span>
               </div>
 
               <div className="flex justify-between items-center">
                 <span className="text-slate-600 dark:text-slate-400">Variable fee ({percentFee}%)</span>
                 <span className="font-semibold">
-                  {results.cfg.symbol} {formatNumber(results.feeVar, results.cfg.locale)}
+                  {results.cfg.symbol} {formatNumber(results.feeVar)}
                 </span>
               </div>
 
               <div className="flex justify-between items-center">
                 <span className="text-slate-600 dark:text-slate-400">Total fee</span>
                 <span className="font-semibold">
-                  {results.cfg.symbol} {formatNumber(results.totalFee, results.cfg.locale)}
+                  {results.cfg.symbol} {formatNumber(results.totalFee)}
                 </span>
               </div>
 
@@ -256,7 +265,7 @@ export default function VatCalculator() {
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600 dark:text-slate-400">VAT tax base (11/12 of total fee)</span>
                       <span className="font-semibold">
-                        {results.cfg.symbol} {formatNumber(results.totalFee * (11 / 12), results.cfg.locale)}
+                        {results.cfg.symbol} {formatNumber(results.totalFee * (11 / 12))}
                       </span>
                     </div>
                   )}
@@ -265,7 +274,7 @@ export default function VatCalculator() {
                       VAT @{(results.cfg.rate * 100).toFixed(0)}%{country === "ID" ? " (of tax base)" : ""}
                     </span>
                     <span className="font-semibold">
-                      {results.cfg.symbol} {formatNumber(results.vat, results.cfg.locale)}
+                      {results.cfg.symbol} {formatNumber(results.vat)}
                     </span>
                   </div>
                 </>
@@ -278,7 +287,7 @@ export default function VatCalculator() {
                 <div className="flex items-center gap-2">
                   <ArrowRight className="h-4 w-4 text-green-500" />
                   <span className="font-bold text-lg text-green-600 dark:text-green-400">
-                    {results.cfg.symbol} {formatNumber(results.receive, results.cfg.locale)}
+                    {results.cfg.symbol} {formatNumber(results.receive)}
                   </span>
                 </div>
               </div>
