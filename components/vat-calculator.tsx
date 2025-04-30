@@ -77,6 +77,34 @@ const VAT = {
 
 type CountryCode = keyof typeof VAT
 
+// Country-specific tooltip examples (roughly equivalent to $0.20 USD)
+const tooltipExamples = {
+  ID: {
+    flatFee: "3,000",
+    symbol: "IDR",
+  },
+  PH: {
+    flatFee: "10",
+    symbol: "PHP",
+  },
+  TH: {
+    flatFee: "7",
+    symbol: "THB",
+  },
+  MY: {
+    flatFee: "1",
+    symbol: "MYR",
+  },
+  VN: {
+    flatFee: "5,000",
+    symbol: "VND",
+  },
+  SG: {
+    flatFee: "0.30",
+    symbol: "SGD",
+  },
+}
+
 export default function VatCalculator() {
   const [country, setCountry] = useState<CountryCode>("ID")
   const [amount, setAmount] = useState<string | number>(VAT.ID.defaultAmt)
@@ -130,6 +158,10 @@ export default function VatCalculator() {
     setAmount(VAT[country].defaultAmt)
     setFlatFee(VAT[country].defaultFlat)
   }, [country])
+
+  const flatFeeTooltip = `A fixed, predetermined charge applied per transaction, regardless of the transaction amount.\nExample: Payouts – ${tooltipExamples[country].symbol} ${tooltipExamples[country].flatFee} per transaction.`
+
+  const percentFeeTooltip = `A variable charge calculated as a percentage of the transaction amount. The final fee scales with the transaction value.\nExample: 2% of the payment amount.`
 
   return (
     <Card className="w-full shadow-sm border border-slate-200 bg-white dark:bg-slate-900">
@@ -191,11 +223,10 @@ export default function VatCalculator() {
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger>
-                    <Info className="h-4 w-4 text-slate-400" />
+                    <Info className="h-4 w-4 text-muted-foreground" />
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-[260px]">
-                    <p>A fixed, predetermined charge applied per transaction, regardless of the transaction amount.</p>
-                    <p className="mt-2">Example: Payouts – IDR 2,500 per transaction.</p>
+                  <TooltipContent className="max-w-[300px] whitespace-pre-line">
+                    {flatFeeTooltip}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -224,11 +255,10 @@ export default function VatCalculator() {
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger>
-                    <Info className="h-4 w-4 text-slate-400" />
+                    <Info className="h-4 w-4 text-muted-foreground" />
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-[260px]">
-                    <p>A variable charge calculated as a percentage of the transaction amount. The final fee scales with the transaction value.</p>
-                    <p className="mt-2">Example: 2% of the payment amount.</p>
+                  <TooltipContent className="max-w-[300px] whitespace-pre-line">
+                    {percentFeeTooltip}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
