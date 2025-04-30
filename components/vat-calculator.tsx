@@ -80,7 +80,7 @@ type CountryCode = keyof typeof VAT
 // Country-specific tooltip examples (roughly equivalent to $0.20 USD)
 const tooltipExamples = {
   ID: {
-    flatFee: "3,000",
+    flatFee: "2,500",
     symbol: "IDR",
   },
   PH: {
@@ -88,15 +88,15 @@ const tooltipExamples = {
     symbol: "PHP",
   },
   TH: {
-    flatFee: "7",
+    flatFee: "15",
     symbol: "THB",
   },
   MY: {
-    flatFee: "1",
+    flatFee: "1.50",
     symbol: "MYR",
   },
   VN: {
-    flatFee: "5,000",
+    flatFee: "10,000",
     symbol: "VND",
   },
   SG: {
