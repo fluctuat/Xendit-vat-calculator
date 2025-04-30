@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Calculator, ArrowRight } from "lucide-react"
+import { Calculator, ArrowRight, Info } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 // VAT data for different countries
 const VAT = {
@@ -185,8 +186,19 @@ export default function VatCalculator() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="flatFee" className="text-sm font-medium">
+            <Label htmlFor="flatFee" className="text-sm font-medium flex items-center gap-2">
               Flat Fee ({VAT[country].symbol})
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-slate-400" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[260px]">
+                    <p>A fixed, predetermined charge applied per transaction, regardless of the transaction amount.</p>
+                    <p className="mt-2">Example: Payouts – IDR 2,500 per transaction.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </Label>
             <Input
               id="flatFee"
@@ -207,8 +219,19 @@ export default function VatCalculator() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="percentFee" className="text-sm font-medium">
+            <Label htmlFor="percentFee" className="text-sm font-medium flex items-center gap-2">
               Percentage Fee (%)
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-slate-400" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[260px]">
+                    <p>A variable charge calculated as a percentage of the transaction amount. The final fee scales with the transaction value.</p>
+                    <p className="mt-2">Example: 2% of the payment amount.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </Label>
             <Input
               id="percentFee"
